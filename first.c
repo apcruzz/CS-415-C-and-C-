@@ -1,64 +1,69 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#define MAX_BUFFER 250   // max size of input line
+#include <string.h>
+
+#define BUFFER_SIZE 250
+#define DELIM " \t\n"
 
 int main() {
-    char buffer[MAX_BUFFER];    // input buffer
-    char *token;                // temporary token pointer
-    char **tokens = NULL;       // dynamic array of strings (on heap)
-    int num_tokens = 0;         // keep track of how many tokens we have
+    char input[BUFFER_SIZE];
+    char *token;
+    char **tokens = NULL;
+    int token_count = 0;
 
-    // Step 1: Read input from user
-    printf("Enter String: ");
-    if (fgets(buffer, MAX_BUFFER, stdin) == NULL) {
-        printf("Error reading input.\n");
+    // Prompt user
+    printf("Enter Strings: ");
+    if (fgets(input, BUFFER_SIZE, stdin) == NULL) {
+        fprintf(stderr, "Error reading input.\n");
         return 1;
     }
 
     // Remove newline character if present
-    buffer[strcspn(buffer, "\n")] = '\0';
-
-    // Step 2: Tokenize input using strtok
-    token = strtok(buffer, " ");  // first token split by whitespace
-    while (token != NULL) {
-        // Step 3: Allocate space for new token in heap
-        tokens = realloc(tokens, (num_tokens + 1) * sizeof(char *));
-        if (tokens == NULL) {
-            printf("Memory allocation failed!\n");
-            return 1;
-        }
-
-        // Copy token string to heap
-        tokens[num_tokens] = malloc(strlen(token) + 1);
-        if (tokens[num_tokens] == NULL) {
-            printf("Memory allocation failed!\n");
-            return 1;
-        }
-        strcpy(tokens[num_tokens], token);
-
-        num_tokens++; // increase token count
-
-        token = strtok(NULL, " "); // get next token
+    size_t len = strlen(input);
+    if (len > 0 && input[len - 1] == '\n') {
+        input[len - 1] = '\0';
     }
 
-    // Step 4: Put NULL at the end of array
-    tokens = realloc(tokens, (num_tokens + 1) * sizeof(char *));
-    tokens[num_tokens] = NULL;
+    // Tokenize input
+    token = strtok(input, DELIM);
+    while (token != NULL) {
+        // Allocate space for new token pointer
+        tokens = realloc(tokens, sizeof(char *) * (token_count + 1));
+        if (tokens == NULL) {
+            fprintf(stderr, "Memory allocation failed.\n");
+            return 1;
+        }
 
-    // Step 5: Print tokens in a separate loop
-    for (int i = 0; i < num_tokens; i++) {
+        // Allocate space for the token string and copy it
+        tokens[token_count] = malloc(strlen(token) + 1);
+        if (tokens[token_count] == NULL) {
+            fprintf(stderr, "Memory allocation failed.\n");
+            return 1;
+        }
+        strcpy(tokens[token_count], token);
+
+        token_count++;
+        token = strtok(NULL, " ");
+    }
+
+    // Add NULL terminator to the array
+    tokens = realloc(tokens, sizeof(char *) * (token_count + 1));
+    tokens[token_count] = NULL;
+
+    // Print tokens in a separate loop
+    for (int i = 0; i < token_count; i++) {
         printf("Token[%d] = %s\n", i, tokens[i]);
     }
 
-    // Step 6: Free memory
-    for (int i = 0; i < num_tokens; i++) {
-        free(tokens[i]);  // free each string
+    // Free memory
+    for (int i = 0; i < token_count; i++) {
+        free(tokens[i]);
     }
-    free(tokens);  // free array of pointers
+    free(tokens);
 
     return 0;
 }
+
 
     // char data[100];  // buffer to hold input
 
